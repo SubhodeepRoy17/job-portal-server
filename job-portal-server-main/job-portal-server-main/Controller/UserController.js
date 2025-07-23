@@ -223,7 +223,9 @@ const addUser = async (req, res, next) => {
         const hashedPassword = await bcrypt.hash(data.password, 16);
         
         const { rowCount } = await pool.query("SELECT COUNT(*) FROM users");
-        const role = rowCount === 0 ? 1 : 3; 
+        const role = rowCount === 0 ? 1 : 3; // Admin if first user, else regular user
+        const ac_status = 1; // Default to active account status
+
         await pool.query(
             `INSERT INTO users (
                 full_name, 
@@ -250,6 +252,7 @@ const addUser = async (req, res, next) => {
                 data.gender, 
                 data.resume || null, 
                 data.signup_type || 'e',
+                ac_status,
                 data.heading || null
             ]
         );
@@ -261,6 +264,7 @@ const addUser = async (req, res, next) => {
         next(createError(500, error.message));
     }
 };
+
 
 // Register recruiter
 const addRecruiter = async (req, res, next) => {
@@ -271,7 +275,9 @@ const addRecruiter = async (req, res, next) => {
 
         const hashedPassword = await bcrypt.hash(data.password, 16);
         
-        const role = 2; 
+        const role = 2; // Recruiter role
+        const ac_status = 1; // Default to active account
+
         await pool.query(
             `INSERT INTO users (
                 full_name, 
@@ -298,6 +304,7 @@ const addRecruiter = async (req, res, next) => {
                 data.gender, 
                 data.resume || null, 
                 data.signup_type || 'e',
+                ac_status,
                 data.heading || null
             ]
         );
@@ -309,6 +316,7 @@ const addRecruiter = async (req, res, next) => {
         next(createError(500, error.message));
     }
 };
+
 
 const updateMobileVerification = async (req, res, next) => {
     try {
