@@ -1,4 +1,4 @@
-const { pool } = require("../../../../../../../Desktop/full-stack-job-portal-server-main/Utils/DBconnect");
+const { pool } = require("../Utils/DBconnect");
 
 async function createWorkExperienceTable() {
     const query = `
