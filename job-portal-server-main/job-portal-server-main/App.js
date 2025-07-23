@@ -9,7 +9,7 @@ const app = express();
 
 const corsOptions = {
     origin: [
-        "https://job-portal-client-seven-pi.vercel.app",
+        "https://job-portal-client-ashen.vercel.app",
         "https://researchengine.in",
         "http://localhost:5173",
         "*"
