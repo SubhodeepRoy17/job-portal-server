@@ -167,7 +167,7 @@ const googleAuthRecruiter = async (req, res, next) => {
 
         const user = await findOrCreateGoogleRecruiter(googleUser);
 
-        const tokenObj = { ID: user.id, role: 2 };
+        const tokenObj = { ID: user.id, role: user.role };
         const token = JWTGenerator(tokenObj);
         const threeMonths = 1000 * 60 * 60 * 24 * 90;
 
