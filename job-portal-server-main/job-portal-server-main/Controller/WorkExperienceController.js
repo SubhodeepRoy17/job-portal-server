@@ -1,5 +1,5 @@
 const WorkExperience = require("../Model/WorkExperienceModel");
-const { checkWorkExperienceInput } = require("../Validation/WorkExperienceValidation");
+const { checkWorkExperienceInput } = require("../../../../../../../Desktop/full-stack-job-portal-server-main/Validation/WorkExperienceValidation");
 
 exports.createWorkExperience = async (req, res) => {
     try {

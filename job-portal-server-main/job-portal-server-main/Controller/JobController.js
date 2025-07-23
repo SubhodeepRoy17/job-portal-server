@@ -195,6 +195,17 @@ module.exports.getSingleJob = async (req, res, next) => {
 // Add a new job
 module.exports.addJob = async (req, res, next) => {
     const jobData = req.body;
+    const currentcategories = jobData.categories || [];
+    const newTotalCategories = currentcategories.map(cat => parseInt(cat, 10));
+
+    if (newTotalCategories.length > 10) {
+        return next(createError(400, "You can only add up to 10 categories"));
+    }
+
+    if (!jobData.job_facilities || jobData.job_facilities.length === 0) {
+        return next(createError(400, "At least one facility must be selected"));
+    }
+
     try {
         // Check if job already exists
         const existsQuery = await pool.query(
@@ -206,22 +217,38 @@ module.exports.addJob = async (req, res, next) => {
             return next(createError(409, "Job already exists"));
         }
 
+        if (jobData.eligibility === 2 && (!jobData.year_selection || jobData.year_selection.length === 0)) {
+            return next(createError(400, "Year selection is required for freshers"));
+        }
+
+        if (jobData.eligibility === 3) {
+            if (!jobData.experience_min || !jobData.experience_max) {
+                return next(createError(400, "Experience range is required for experienced candidates"));
+            }
+            if (parseFloat(jobData.experience_max) < parseFloat(jobData.experience_min)) {
+                return next(createError(400, "Maximum experience must be greater than or equal to minimum experience"));
+            }
+        }
+
         const query = `
             INSERT INTO jobs (
                 company, position, job_status, job_type, job_location,
-                created_by, job_vacancy, job_salary, job_deadline,
+                workplace_type, categories, created_by, job_vacancy, job_salary, job_deadline,
                 job_description, job_skills, job_facilities, job_contact,
-                visibility_status
+                visibility_status, eligibility, student_currently_studying,
+                year_selection, experience_min, experience_max
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
             RETURNING *`;
-        
+
         const values = [
             jobData.company,
             jobData.position,
             jobData.job_status,
             jobData.job_type,
-            jobData.job_location,
+            jobData.workplace_type === 1 ? null : jobData.job_location,
+            jobData.workplace_type,
+            jobData.categories,
             req.user.id,
             jobData.job_vacancy,
             jobData.job_salary,
@@ -230,7 +257,13 @@ module.exports.addJob = async (req, res, next) => {
             jobData.job_skills,
             jobData.job_facilities,
             jobData.job_contact,
-            VISIBILITY_STATUS.UNDER_REVIEW
+            VISIBILITY_STATUS.UNDER_REVIEW,
+            jobData.eligibility || 1,
+            jobData.eligibility === 1 ? jobData.student_currently_studying : 
+                (jobData.student_currently_studying || null),
+            jobData.eligibility === 2 ? jobData.year_selection : null,
+            jobData.eligibility === 3 ? jobData.experience_min : null,
+            jobData.eligibility === 3 ? jobData.experience_max : null
         ];
 
         const result = await pool.query(query, values);
@@ -249,6 +282,14 @@ module.exports.addJob = async (req, res, next) => {
 module.exports.updateSingleJob = async (req, res, next) => {
     const { id } = req.params;
     const data = req.body;
+    const currentcategories = data.categories || [];
+    const newTotalCategories = currentcategories.map(cat => parseInt(cat, 10));
+    if (newTotalCategories.length > 10) {
+        return next(createError(400, "You can only update up to 10 categories"));
+    }
+    if (!data.job_facilities || data.job_facilities.length === 0) {
+        return next(createError(400, "At least one facility must be selected"));
+    }
     try {
         // Check if job exists
         const checkQuery = await pool.query("SELECT * FROM jobs WHERE id = $1", [id]);
@@ -261,14 +302,29 @@ module.exports.updateSingleJob = async (req, res, next) => {
             return next(createError(403, "Not authorized to update this job"));
         }
 
-        // Update job
+        if (data.eligibility === 2 && (!data.year_selection || data.year_selection.length === 0)) {
+            return next(createError(400, "Year selection is required for freshers"));
+        }
+
+        if (data.eligibility === 3) {
+            if (!data.experience_min || !data.experience_max) {
+                return next(createError(400, "Experience range is required for experienced candidates"));
+            }
+            if (parseFloat(data.experience_max) < parseFloat(data.experience_min)) {
+                return next(createError(400, "Maximum experience must be greater than or equal to minimum experience"));
+            }
+        }
+
         const query = `
             UPDATE jobs 
             SET company = $1, position = $2, job_status = $3, job_type = $4, 
-                job_location = $5, job_vacancy = $6, job_salary = $7, 
-                job_deadline = $8, job_description = $9, job_skills = $10, 
-                job_facilities = $11, job_contact = $12, updated_at = NOW()
-            WHERE id = $13
+                job_location = $5, workplace_type = $6, categories = $7, job_vacancy = $8, 
+                job_salary = $9, job_deadline = $10, job_description = $11, 
+                job_skills = $12, job_facilities = $13, job_contact = $14,
+                eligibility = $15, student_currently_studying = $16,
+                year_selection = $17, experience_min = $18, experience_max = $19,
+                updated_at = NOW()
+            WHERE id = $20
             RETURNING *`;
 
         const values = [
@@ -276,7 +332,9 @@ module.exports.updateSingleJob = async (req, res, next) => {
             data.position,
             data.job_status,
             data.job_type,
-            data.job_location,
+            data.workplace_type === 1 ? null : data.job_location,
+            data.workplace_type,
+            data.categories,
             data.job_vacancy,
             data.job_salary,
             data.job_deadline,
@@ -284,6 +342,15 @@ module.exports.updateSingleJob = async (req, res, next) => {
             data.job_skills,
             data.job_facilities,
             data.job_contact,
+            data.eligibility || checkQuery.rows[0].eligibility || 1,
+            data.eligibility === 1 ? data.student_currently_studying : 
+                (data.student_currently_studying !== undefined ? data.student_currently_studying : checkQuery.rows[0].student_currently_studying),
+            data.eligibility === 2 ? data.year_selection : 
+                (data.eligibility !== 2 ? null : checkQuery.rows[0].year_selection),
+            data.eligibility === 3 ? data.experience_min : 
+                (data.eligibility !== 3 ? null : checkQuery.rows[0].experience_min),
+            data.eligibility === 3 ? data.experience_max : 
+                (data.eligibility !== 3 ? null : checkQuery.rows[0].experience_max),
             id
         ];
 

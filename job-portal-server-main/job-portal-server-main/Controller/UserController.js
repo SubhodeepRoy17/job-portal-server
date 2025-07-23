@@ -2,7 +2,7 @@ const { pool } = require("../Utils/DBconnect");
 const createError = require("http-errors");
 const bcrypt = require("bcrypt");
 const JWTGenerator = require("../Utils/JWTGenerator");
-const { findOrCreateGoogleUser } = require("../Model/UserModel");
+const { findOrCreateGoogleUser, findOrCreateGoogleRecruiter } = require("../Model/UserModel");
 const { parsePhoneNumberFromString } = require('libphonenumber-js');
 
 // GET all users (excluding password)
@@ -147,6 +147,58 @@ const googleAuth = async (req, res, next) => {
     }
 };
 
+const googleAuthRecruiter = async (req, res, next) => {
+    try {
+        let {
+            email,
+            google_uid,
+            full_name = "Google User",
+            profile_photo = null,
+            signup_type = "g"
+        } = req.body;
+
+        if (!email || !google_uid) {
+            return next(createError(400, "Email and Google UID are required"));
+        }
+
+        email = email.trim().toLowerCase();
+
+        const googleUser = { email, full_name, profile_photo, google_uid };
+
+        const user = await findOrCreateGoogleRecruiter(googleUser);
+
+        const tokenObj = { ID: user.id, role: 2 };
+        const token = JWTGenerator(tokenObj);
+        const threeMonths = 1000 * 60 * 60 * 24 * 90;
+
+        res.cookie(process.env.COOKIE_NAME, token, {
+            expires: new Date(Date.now() + threeMonths),
+            secure: true,
+            httpOnly: true,
+            signed: true,
+            sameSite: "None",
+        });
+
+        console.log(`[GOOGLE_AUTH_RECRUITER] Platform: ${req.clientPlatform} | Email: ${email} | UID: ${google_uid}`);
+
+        res.status(200).json({
+            status: true,
+            message: "Google recruiter authentication successful",
+            user: {
+                id: user.id,
+                email: user.email,
+                full_name: user.full_name,
+                profile_photo: user.profile_photo,
+                role: user.role,
+                ac_status: user.ac_status
+            },
+        });
+    } catch (error) {
+        console.error("[GOOGLE_AUTH_RECRUITER_ERROR]", error);
+        next(createError(500, "Google recruiter authentication failed"));
+    }
+};
+
 const logOut = async (req, res, next) => {
     try {
         res.cookie(process.env.COOKIE_NAME, "", {
@@ -210,13 +262,62 @@ const addUser = async (req, res, next) => {
     }
 };
 
+// Register recruiter
+const addRecruiter = async (req, res, next) => {
+    const data = req.body;
+    try {
+        const { rows: existing } = await pool.query("SELECT * FROM users WHERE email = $1", [data.email]);
+        if (existing.length) return next(createError(409, "Email already exists"));
+
+        const hashedPassword = await bcrypt.hash(data.password, 16);
+        
+        const role = 2; 
+        await pool.query(
+            `INSERT INTO users (
+                full_name, 
+                username, 
+                email, 
+                password, 
+                role,  
+                location, 
+                gender, 
+                resume, 
+                signup_type,
+                ac_status,
+                heading,
+                is_mail_verified,
+                is_mo_verified
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, FALSE, FALSE)`,
+            [
+                data.full_name, 
+                data.username, 
+                data.email, 
+                hashedPassword, 
+                role,  
+                data.location, 
+                data.gender, 
+                data.resume || null, 
+                data.signup_type || 'e',
+                data.heading || null
+            ]
+        );
+
+        console.log(`[REGISTER] Platform: ${req.clientPlatform} | Email: ${data.email}`);
+
+        res.status(200).json({ status: true, message: "Registered Successfully" });
+    } catch (error) {
+        next(createError(500, error.message));
+    }
+};
+
 const updateMobileVerification = async (req, res, next) => {
     try {
         const userId = req.user?.id;
+        const mobile_no = req.body.mobile_no;
         
         await pool.query(
-            "UPDATE users SET is_mobile_verified = $1 WHERE id = $2",
-            [true, userId]
+            "UPDATE users SET mobile_no = $1, is_mo_verified = $2 WHERE id = $3",
+            [mobile_no, true, userId]
         );
 
         res.status(200).json({ 
@@ -226,6 +327,24 @@ const updateMobileVerification = async (req, res, next) => {
     } catch (error) {
         next(createError(500, error.message));
     }
+};
+
+const updateMobileEdit = async (req, res, next) => {
+    try {
+    const userId = req.user?.id;
+    
+    await pool.query(
+      "UPDATE users SET is_mo_verified = false WHERE id = $1",
+      [userId]
+    );
+
+    res.status(200).json({ 
+      status: true, 
+      message: "Mobile verification reset" 
+    });
+  } catch (error) {
+    next(createError(500, error.message));
+  }
 };
 
 const updateAcStatus = async (req, res, next) => {
@@ -478,13 +597,16 @@ module.exports = {
     getMe,
     logOut,
     addUser,
+    addRecruiter,
     updateResume,
     loginUser,
     updateMobileVerification,
+    updateMobileEdit,
     updateUser,
     deleteUser,
     deleteAllUser,
     googleAuth,
+    googleAuthRecruiter,
     updateAcStatus,
     hibernateAccount,
     deleteAccountPermanently

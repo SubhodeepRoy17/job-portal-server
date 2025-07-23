@@ -11,9 +11,11 @@ const {
     loginUser,
     updateResume,
     updateMobileVerification,
+    updateMobileEdit,
     updateUser,
     deleteUser,
-    deleteAllUser
+    deleteAllUser,
+    addRecruiter
 } = require("../Controller/UserController");
 
 const { clientPlatform } = require("../Middleware/clientPlatform");
@@ -45,12 +47,25 @@ UserRouter.post("/register",
     inputValidationMiddleware,
     addUser
 );
+UserRouter.post("/register-recruiter",
+    clientPlatform,
+    checkRegisterInput,
+    inputValidationMiddleware,
+    addRecruiter
+);
 
 UserRouter.patch("/update-mobile-verification",
     clientPlatform,
     userAuthorizationHandler(1, 2, 3),
     express.json(),
     updateMobileVerification
+);
+
+UserRouter.patch("/update-mobile-edit",
+    clientPlatform,
+    userAuthorizationHandler(1, 2, 3),
+    express.json(),
+    updateMobileEdit
 );
 
 UserRouter.patch("/update-resume",
@@ -61,6 +76,12 @@ UserRouter.patch("/update-resume",
 );
 
 UserRouter.post("/login",
+    clientPlatform,
+    checkLoginInput,
+    inputValidationMiddleware,
+    loginUser
+);
+UserRouter.post("/login-recruiter",
     clientPlatform,
     checkLoginInput,
     inputValidationMiddleware,

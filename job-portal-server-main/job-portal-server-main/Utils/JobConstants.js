@@ -23,3 +23,10 @@ exports.JOB_SORT_BY = {
     ASCENDING: "a-z",
     DESCENDING: "z-a",
 };
+
+exports.WORKPLACE_TYPE = {
+    WORK_FROM_HOME: 1,
+    IN_OFFICE: 2,
+    ON_FIELD: 3,
+    HYBRID: 4,
+};

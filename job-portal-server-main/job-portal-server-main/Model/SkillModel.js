@@ -57,18 +57,6 @@ async function findSuggestedSkills() {
      LIMIT 8`
   );
   return rows;
-
-  // Option 2: Get fixed skills by IDs (Replace with actual IDs)
-  /*
-  const fixedSuggestedIds = [1, 2, 3, 4, 5, 6, 7, 8]; // Replace with your actual skill IDs
-  const { rows } = await pool.query(
-    `SELECT id, name FROM master_skills_list 
-     WHERE id = ANY($1) 
-     ORDER BY name`,
-    [fixedSuggestedIds]
-  );
-  return rows;
-  */
 }
 
 module.exports = {

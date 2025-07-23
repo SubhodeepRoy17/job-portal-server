@@ -37,14 +37,28 @@ AuthRouter.post(
     UserController.addUser
 );
 AuthRouter.post(
+    "/register-recruiter",
+    clientPlatform,
+    checkRegisterInput,
+    inputValidationMiddleware,
+    UserController.addRecruiter
+);
+AuthRouter.post(
     "/login",
     clientPlatform,
     checkLoginInput,
     inputValidationMiddleware,
     UserController.loginUser
 );
-
+AuthRouter.post(
+    "/login-recruiter",
+    clientPlatform,
+    checkLoginInput,
+    inputValidationMiddleware,
+    UserController.loginUser
+);
 AuthRouter.post("/google", clientPlatform, UserController.googleAuth);
+AuthRouter.post("/google-recruiter", clientPlatform, UserController.googleAuthRecruiter);
 
 AuthRouter.patch(
   "/status",
