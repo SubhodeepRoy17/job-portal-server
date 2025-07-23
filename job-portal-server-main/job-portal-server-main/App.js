@@ -9,7 +9,7 @@ const app = express();
 
 const corsOptions = {
     origin: [
-        "https://job-portal-client-ashen.vercel.app",
+        "https://job-portal-client-seven-pi.vercel.app",
         "https://researchengine.in",
         "http://localhost:5173",
         "*"
@@ -46,13 +46,18 @@ const WorkExperienceRouter = require("./Router/WorkExperienceRouter");
 const recruiterProfileRouter = require('./Router/RecruiterProfileRouter');
 const UserProfileRouter = require("./Router/UserProfileRouter");
 const SkillRouter = require("./Router/SkillRouter");
+const CategoryRouter = require("./Router/CategoryRouter");
+const FacilitiesRouter = require("./Router/FacilitiesRouter");
 const CertificateRouter = require("./Router/CertificateRouter");
 const ProjectRouter = require("./Router/ProjectRouter");
 
 // ✅ Routers
 app.use("/api/skills", authenticateUser, SkillRouter);
+app.use("/api/categories", authenticateUser, CategoryRouter);
+app.use("/api/facilities", authenticateUser, FacilitiesRouter);
 app.use("/api/jobs", authenticateUser, JobRouter);
 app.use("/api/users", authenticateUser, UserRouter);
+
 app.use("/api/certificates", authenticateUser, CertificateRouter);
 app.use("/api/projects", authenticateUser, ProjectRouter);
 app.use("/api/auth", AuthRouter);
