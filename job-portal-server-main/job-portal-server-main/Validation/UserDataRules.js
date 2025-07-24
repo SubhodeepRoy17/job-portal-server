@@ -8,7 +8,6 @@ const usernameRegex = /^[a-zA-Z0-9_]{3,30}$/;
 const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 exports.checkRegisterInput = [
-    check("username").trim().notEmpty().withMessage("Username is required"),
 
     check("email")
         .trim()
