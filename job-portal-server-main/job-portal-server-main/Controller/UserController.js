@@ -229,7 +229,6 @@ const addUser = async (req, res, next) => {
         await pool.query(
             `INSERT INTO users (
                 full_name, 
-                username, 
                 email, 
                 password, 
                 role,  
@@ -241,10 +240,9 @@ const addUser = async (req, res, next) => {
                 heading,
                 is_mail_verified,
                 is_mo_verified
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, FALSE, FALSE)`,
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, FALSE, FALSE)`,
             [
                 data.full_name, 
-                data.username, 
                 data.email, 
                 hashedPassword, 
                 role,  
@@ -281,7 +279,6 @@ const addRecruiter = async (req, res, next) => {
         await pool.query(
             `INSERT INTO users (
                 full_name, 
-                username, 
                 email, 
                 password, 
                 role,  
@@ -293,10 +290,9 @@ const addRecruiter = async (req, res, next) => {
                 heading,
                 is_mail_verified,
                 is_mo_verified
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, FALSE, FALSE)`,
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, FALSE, FALSE)`,
             [
                 data.full_name, 
-                data.username, 
                 data.email, 
                 hashedPassword, 
                 role,  

@@ -103,7 +103,7 @@ async function findOrCreateGoogleRecruiter(googleUser) {
     if (existingByEmail.length) {
         await pool.query(
             `UPDATE users 
-            SET google_uid = $1, signup_type = 'g', full_name = $2, profile_photo = $3, is_mail_verified = TRUE, role = 2 
+            SET google_uid = $1, signup_type = 'g', full_name = $2, profile_photo = $3, is_mail_verified = TRUE 
             WHERE email = $4`,
             [google_uid, full_name, profile_photo, email]
         );
