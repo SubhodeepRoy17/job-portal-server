@@ -1,3 +1,4 @@
+//job-portal-server-main/job-portal-server-main/Controller/RecruiterProfileController.js
 const { pool } = require("../Utils/DBconnect");
 const createError = require("http-errors");
 const { 
