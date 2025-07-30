@@ -12,27 +12,29 @@ const corsOptions = {
         "https://job-portal-client-ashen.vercel.app",
         "https://researchengine.in",
         "http://localhost:5173",
-        "*"
+        "http://localhost:3000"
     ],
     credentials: true,
     methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
     allowedHeaders: ["Content-Type", "X-Client-Platform", "Authorization"],
 };
 
-// ✅ CORS should be one of the first
+// Middleware Setup
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
+// Static files and body parsing
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 app.use('/img/logo', express.static(path.join(__dirname, 'public/img/logo')));
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(helmet());
 app.use(compression());
 
-// Your middleware
+// Custom Middleware
 const { authenticateUser } = require("./Middleware/UserAuthenticationMiddleware");
 const { clientPlatform } = require("./Middleware/clientPlatform");
-
 app.use(clientPlatform);
 
 // Routers
@@ -47,18 +49,17 @@ const recruiterProfileRouter = require('./Router/RecruiterProfileRouter');
 const UserProfileRouter = require("./Router/UserProfileRouter");
 const SkillRouter = require("./Router/SkillRouter");
 const CategoryRouter = require("./Router/CategoryRouter");
-
 const FacilitiesRouter = require("./Router/FacilitiesRouter");
 const CertificateRouter = require("./Router/CertificateRouter");
 const ProjectRouter = require("./Router/ProjectRouter");
+const companyProfileRouter = require('./Router/companyProfileRouter');
 
-// ✅ Routers
+// Route Mounting
 app.use("/api/skills", authenticateUser, SkillRouter);
 app.use("/api/categories", authenticateUser, CategoryRouter);
 app.use("/api/facilities", authenticateUser, FacilitiesRouter);
 app.use("/api/jobs", authenticateUser, JobRouter);
 app.use("/api/users", authenticateUser, UserRouter);
-
 app.use("/api/certificates", authenticateUser, CertificateRouter);
 app.use("/api/projects", authenticateUser, ProjectRouter);
 app.use("/api/auth", AuthRouter);
@@ -68,5 +69,6 @@ app.use("/api/recruiter-profile", authenticateUser, recruiterProfileRouter);
 app.use("/api/application", authenticateUser, ApplicationRouter);
 app.use("/api/work-experience", authenticateUser, WorkExperienceRouter);
 app.use("/api/education", authenticateUser, EducationRouter);
+app.use("/api/company", companyProfileRouter);
 
 module.exports = app;

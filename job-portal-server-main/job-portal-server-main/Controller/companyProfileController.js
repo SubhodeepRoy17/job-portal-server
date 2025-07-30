@@ -1,6 +1,8 @@
+//job-portal-server-main/job-portal-server-main/Controller/companyProfileController.js
 const CompanyProfile = require('../models/companyProfile');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
+const bcrypt = require('bcryptjs');
 
 const companyProfileController = {
     register: async (req, res) => {
@@ -17,7 +19,30 @@ const companyProfileController = {
         }
 
         try {
-            const existingCompany = await CompanyProfile.findByEmail(req.body.company_mail_id);
+            // Map frontend fields to backend fields
+            const profileData = {
+                full_name: req.body.fullName || req.body.companyName,
+                company_mail_id: req.body.email,
+                password: req.body.password,
+                company_logo_url: req.body.company_logo_url,
+                company_banner_url: req.body.company_banner_url,
+                company_name: req.body.companyName,
+                about_company: req.body.aboutUs,
+                organizations_type: req.body.organizationType,
+                industry_type: req.body.industryType,
+                team_size: req.body.teamSize,
+                year_of_establishment: req.body.yearEstablished,
+                company_website: req.body.companyWebsite,
+                company_vision: req.body.companyVision,
+                headquarter_phone_no: `${req.body.phoneCountryCode}${req.body.phoneNumber}`,
+                // Map social links if needed
+                facebook_url: req.body.socialLinks?.find(l => l.platform === 'facebook')?.url,
+                twitter_url: req.body.socialLinks?.find(l => l.platform === 'twitter')?.url,
+                instagram_url: req.body.socialLinks?.find(l => l.platform === 'instagram')?.url,
+                youtube_url: req.body.socialLinks?.find(l => l.platform === 'youtube')?.url
+            };
+
+            const existingCompany = await CompanyProfile.findByEmail(profileData.company_mail_id);
             if (existingCompany) {
                 return res.status(400).json({
                     success: false,
@@ -25,7 +50,7 @@ const companyProfileController = {
                 });
             }
 
-            const newCompany = await CompanyProfile.create(req.body);
+            const newCompany = await CompanyProfile.create(profileData);
             
             const token = jwt.sign(
                 { 

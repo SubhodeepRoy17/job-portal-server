@@ -1,3 +1,4 @@
+//job-portal-server-main/job-portal-server-main/Model/companyProfile.js
 const pool = require('../config/db');
 const bcrypt = require('bcryptjs');
 

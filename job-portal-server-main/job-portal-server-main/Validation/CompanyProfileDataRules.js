@@ -1,15 +1,15 @@
-// validators/CompanyProfileDataRules.js
+//job-portal-server-main/job-portal-server-main/Validation/CompanyProfileDataRules.js
 const { body } = require('express-validator');
 const pool = require('../config/db');
 
 module.exports = {
     registerValidation: () => [
-        body('full_name')
+        body('companyName')
             .trim()
-            .notEmpty().withMessage('Full name is required')
-            .isLength({ max: 255 }).withMessage('Full name cannot exceed 255 characters'),
+            .notEmpty().withMessage('Company name is required')
+            .isLength({ max: 255 }).withMessage('Company name cannot exceed 255 characters'),
         
-        body('company_mail_id')
+        body('email')
             .trim()
             .notEmpty().withMessage('Company email is required')
             .isEmail().withMessage('Invalid email format')
@@ -26,36 +26,27 @@ module.exports = {
         
         body('password')
             .notEmpty().withMessage('Password is required')
-            .isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
-            .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
-            .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number and one special character'),
+            .isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
         
-        body('company_name')
-            .trim()
-            .notEmpty().withMessage('Company name is required')
-            .isLength({ max: 255 }).withMessage('Company name cannot exceed 255 characters'),
-        
-        body('organizations_type')
+        body('organizationType')
             .notEmpty().withMessage('Organization type is required')
-            .isIn(['solo proprietor', 'pvt LTD', 'LTD', 'OPC', 'LLP', 'INC', 'Corporation'])
+            .isIn(['startup', 'corporation', 'nonprofit', 'government', 'agency'])
             .withMessage('Invalid organization type'),
         
-        body('industry_type')
+        body('industryType')
             .notEmpty().withMessage('Industry type is required')
-            .isIn(['Fintech', 'Engineering', 'Software & IT', 'edutech', 'oil and gas', 'other'])
+            .isIn(['technology', 'healthcare', 'finance', 'education', 'retail', 'manufacturing'])
             .withMessage('Invalid industry type'),
         
-        body('team_size')
+        body('teamSize')
             .notEmpty().withMessage('Team size is required')
-            .isIn(['1-10', '10-50', '50-100', '100-300', '300-1000', '2000-10000'])
+            .isIn(['1-10', '11-50', '51-200', '201-500', '500+'])
             .withMessage('Invalid team size'),
         
-        body('year_of_establishment')
-            .notEmpty().withMessage('Year of establishment is required')
-            .isInt({ min: 1800, max: new Date().getFullYear() })
-            .withMessage(`Year must be between 1800 and ${new Date().getFullYear()}`),
+        body('yearEstablished')
+            .notEmpty().withMessage('Year of establishment is required'),
         
-        body('headquarter_phone_no')
+        body('phoneNumber')
             .notEmpty().withMessage('Phone number is required')
             .isMobilePhone().withMessage('Invalid phone number')
     ],

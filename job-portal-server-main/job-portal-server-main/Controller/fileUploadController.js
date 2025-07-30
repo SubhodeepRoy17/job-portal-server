@@ -1,4 +1,3 @@
-// controllers/fileUploadController.js
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -7,7 +6,7 @@ const { v4: uuidv4 } = require('uuid');
 // Configure storage
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = path.join(__dirname, '../public/uploads');
+        const uploadDir = path.join(__dirname, '../../public/uploads');
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
@@ -46,7 +45,8 @@ exports.uploadFile = async (req, res) => {
             });
         }
 
-        const fileUrl = `/uploads/${req.file.filename}`;
+        // Construct full accessible URL
+        const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
 
         res.status(200).json({
             success: true,
