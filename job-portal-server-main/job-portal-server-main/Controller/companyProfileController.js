@@ -11,36 +11,35 @@ const companyProfileController = {
             return res.status(400).json({ 
                 success: false,
                 message: 'Validation failed',
-                errors: errors.array().map(err => ({
-                    field: err.param,
-                    message: err.msg
-                }))
+                errors: errors.array()
             });
         }
 
         try {
-            // Map frontend fields to backend fields
+            console.log('Raw request body:', req.body); // Debug log
+
             const profileData = {
-                full_name: req.body.fullName || req.body.companyName,
+                full_name: req.body.fullName,
                 company_mail_id: req.body.email,
                 password: req.body.password,
-                company_logo_url: req.body.company_logo_url,
-                company_banner_url: req.body.company_banner_url,
+                company_logo_url: req.body.company_logo_url || null,
+                company_banner_url: req.body.company_banner_url || null,
                 company_name: req.body.companyName,
                 about_company: req.body.aboutUs,
                 organizations_type: req.body.organizationType,
                 industry_type: req.body.industryType,
                 team_size: req.body.teamSize,
                 year_of_establishment: req.body.yearEstablished,
-                company_website: req.body.companyWebsite,
-                company_vision: req.body.companyVision,
-                headquarter_phone_no: `${req.body.phoneCountryCode}${req.body.phoneNumber}`,
-                // Map social links if needed
-                facebook_url: req.body.socialLinks?.find(l => l.platform === 'facebook')?.url,
-                twitter_url: req.body.socialLinks?.find(l => l.platform === 'twitter')?.url,
-                instagram_url: req.body.socialLinks?.find(l => l.platform === 'instagram')?.url,
-                youtube_url: req.body.socialLinks?.find(l => l.platform === 'youtube')?.url
+                company_website: req.body.companyWebsite || null,
+                company_vision: req.body.companyVision || null,
+                headquarter_phone_no: `${req.body.phoneCountryCode || ''}${req.body.phoneNumber || ''}`,
+                facebook_url: req.body.socialLinks?.find(l => l.platform === 'facebook')?.url || null,
+                twitter_url: req.body.socialLinks?.find(l => l.platform === 'twitter')?.url || null,
+                instagram_url: req.body.socialLinks?.find(l => l.platform === 'instagram')?.url || null,
+                youtube_url: req.body.socialLinks?.find(l => l.platform === 'youtube')?.url || null
             };
+
+            console.log('Processed profile data:', profileData); // Debug log
 
             const existingCompany = await CompanyProfile.findByEmail(profileData.company_mail_id);
             if (existingCompany) {
@@ -62,7 +61,7 @@ const companyProfileController = {
                 { expiresIn: '7d' }
             );
 
-            res.status(201).json({
+            return res.status(201).json({
                 success: true,
                 message: 'Company registered successfully',
                 data: {
@@ -77,10 +76,14 @@ const companyProfileController = {
             });
 
         } catch (error) {
-            console.error('Registration error:', error);
-            res.status(500).json({ 
+            console.error('Full registration error:', {
+                message: error.message,
+                stack: error.stack,
+                error: error
+            });
+            return res.status(500).json({ 
                 success: false,
-                message: 'Internal server error',
+                message: 'Registration failed. Please try again.',
                 error: process.env.NODE_ENV === 'development' ? error.message : undefined
             });
         }
