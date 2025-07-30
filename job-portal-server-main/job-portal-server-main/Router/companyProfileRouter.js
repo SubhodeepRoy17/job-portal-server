@@ -4,8 +4,6 @@ const companyProfileController = require('../Controller/companyProfileController
 const fileUploadController = require('../Controller/fileUploadController');
 const CompanyProfileDataRules = require('../Validation/CompanyProfileDataRules');
 const cors = require('cors');
-const { authenticateUser } = require('../Middleware/auth');
-const { roleCheck } = require('../Middleware/roleCheck');
 
 // CORS configuration
 const corsOptions = {
@@ -39,10 +37,6 @@ router.post('/login',
   CompanyProfileDataRules.loginValidation(),
   companyProfileController.login
 );
-
-// Protected Routes (require authentication)
-router.use(authenticateUser);
-router.use(roleCheck('company'));
 
 router.get('/profile',
   companyProfileController.getProfile
