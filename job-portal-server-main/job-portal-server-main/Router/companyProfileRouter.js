@@ -33,11 +33,6 @@ router.post('/register',
   companyProfileController.register
 );
 
-router.post('/login',
-  CompanyProfileDataRules.loginValidation(),
-  companyProfileController.login
-);
-
 router.get('/profile',
   companyProfileController.getProfile
 );
