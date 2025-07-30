@@ -1,162 +1,186 @@
 const CompanyProfile = require('../models/companyProfile');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
-const { toast } = require('react-toastify');
 
 const companyProfileController = {
     register: async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorMessages = errors.array().map(err => err.msg);
             return res.status(400).json({ 
                 success: false,
                 message: 'Validation failed',
-                errors: errorMessages
+                errors: errors.array().map(err => ({
+                    field: err.param,
+                    message: err.msg
+                }))
             });
         }
 
         try {
-            const {
-                full_name,
-                company_mail_id,
-                password,
-                company_name,
-                about_company,
-                organizations_type,
-                industry_type,
-                team_size,
-                year_of_establishment,
-                company_website,
-                company_app_link,
-                company_vision,
-                linkedin_url,
-                instagram_url,
-                facebook_url,
-                youtube_url,
-                custom_link,
-                map_location_url,
-                headquarter_phone_no,
-                email_id
-            } = req.body;
+            const existingCompany = await CompanyProfile.findByEmail(req.body.company_mail_id);
+            if (existingCompany) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Company email already registered'
+                });
+            }
 
-            // Hash password
-            const hashedPassword = await bcrypt.hash(password, 12);
+            const newCompany = await CompanyProfile.create(req.body);
             
-            // Create company profile
-            const newCompany = await CompanyProfile.create({
-                full_name,
-                company_mail_id,
-                password: hashedPassword,
-                company_name,
-                about_company,
-                organizations_type,
-                industry_type,
-                team_size,
-                year_of_establishment,
-                company_website,
-                company_app_link,
-                company_vision,
-                linkedin_url,
-                instagram_url,
-                facebook_url,
-                youtube_url,
-                custom_link,
-                map_location_url,
-                headquarter_phone_no,
-                email_id: email_id || company_mail_id
-            });
-
-            // Generate JWT token
             const token = jwt.sign(
-                { id: newCompany.id, role: newCompany.role },
+                { 
+                    id: newCompany.id, 
+                    role: newCompany.role,
+                    email: newCompany.company_mail_id
+                },
                 process.env.JWT_SECRET,
-                { expiresIn: '1h' }
+                { expiresIn: '7d' }
             );
 
-            toast.success('Company registered successfully!');
-            
             res.status(201).json({
                 success: true,
                 message: 'Company registered successfully',
-                company: {
-                    id: newCompany.id,
-                    company_name: newCompany.company_name,
-                    company_mail_id: newCompany.company_mail_id,
-                    role: newCompany.role
-                },
-                token
+                data: {
+                    token,
+                    company: {
+                        id: newCompany.id,
+                        name: newCompany.company_name,
+                        email: newCompany.company_mail_id,
+                        role: newCompany.role
+                    }
+                }
             });
 
         } catch (error) {
             console.error('Registration error:', error);
-            toast.error('Failed to register company');
             res.status(500).json({ 
                 success: false,
-                message: 'Server error',
-                error: error.message 
+                message: 'Internal server error',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            });
+        }
+    },
+
+    login: async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'Validation failed',
+                errors: errors.array().map(err => ({
+                    field: err.param,
+                    message: err.msg
+                }))
+            });
+        }
+
+        try {
+            const { company_mail_id, password } = req.body;
+            const company = await CompanyProfile.findByEmail(company_mail_id);
+
+            if (!company) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Invalid credentials'
+                });
+            }
+
+            const isMatch = await bcrypt.compare(password, company.password);
+            if (!isMatch) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Invalid credentials'
+                });
+            }
+
+            const token = jwt.sign(
+                { 
+                    id: company.id, 
+                    role: company.role,
+                    email: company.company_mail_id
+                },
+                process.env.JWT_SECRET,
+                { expiresIn: '7d' }
+            );
+
+            res.status(200).json({
+                success: true,
+                message: 'Login successful',
+                data: {
+                    token,
+                    company: {
+                        id: company.id,
+                        name: company.company_name,
+                        email: company.company_mail_id,
+                        role: company.role
+                    }
+                }
+            });
+
+        } catch (error) {
+            console.error('Login error:', error);
+            res.status(500).json({ 
+                success: false,
+                message: 'Internal server error',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined
             });
         }
     },
 
     getProfile: async (req, res) => {
         try {
-            const company = await CompanyProfile.findById(req.company.id);
+            const company = await CompanyProfile.getProfileById(req.user.id);
             if (!company) {
-                return res.status(404).json({ message: 'Company not found' });
+                return res.status(404).json({
+                    success: false,
+                    message: 'Company not found'
+                });
             }
-            
-            // Don't send password in response
-            const { password, ...profileData } = company;
-            
-            res.status(200).json(profileData);
+
+            res.status(200).json({
+                success: true,
+                data: company
+            });
+
         } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: 'Server error' });
+            console.error('Get profile error:', error);
+            res.status(500).json({ 
+                success: false,
+                message: 'Internal server error',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            });
         }
     },
 
     updateProfile: async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'Validation failed',
+                errors: errors.array().map(err => ({
+                    field: err.param,
+                    message: err.msg
+                }))
+            });
+        }
+
         try {
-            const updatedCompany = await CompanyProfile.update(req.company.id, req.body);
-            
-            // Don't send password in response
-            const { password, ...profileData } = updatedCompany;
+            const updatedCompany = await CompanyProfile.updateProfile(req.user.id, req.body);
             
             res.status(200).json({
+                success: true,
                 message: 'Profile updated successfully',
-                company: profileData
+                data: updatedCompany
             });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: 'Server error' });
-        }
-    },
 
-    deleteProfile: async (req, res) => {
-        try {
-            await CompanyProfile.delete(req.company.id);
-            res.status(200).json({ message: 'Company profile deleted successfully' });
         } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: 'Server error' });
-        }
-    },
-
-    getAllCompanies: async (req, res) => {
-        try {
-            const companies = await CompanyProfile.getAll();
-            
-            // Remove passwords from response
-            const sanitizedCompanies = companies.map(company => {
-                const { password, ...companyData } = company;
-                return companyData;
+            console.error('Update profile error:', error);
+            res.status(500).json({ 
+                success: false,
+                message: 'Internal server error',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined
             });
-            
-            res.status(200).json(sanitizedCompanies);
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: 'Server error' });
         }
     }
 };
