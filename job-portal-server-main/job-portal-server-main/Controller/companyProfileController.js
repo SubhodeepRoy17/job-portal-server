@@ -8,44 +8,37 @@ const companyProfileController = {
     register: async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            console.log('Validation errors:', errors.array()); // Debug
             return res.status(400).json({ 
-                success: false,
-                message: 'Validation failed',
-                errors: errors.array()
+            success: false,
+            message: 'Validation failed',
+            errors: errors.array() 
             });
         }
 
         try {
-            console.log('Raw request body:', req.body);
-
-            // Ensure all required fields exist
-            const requiredFields = ['email', 'password', 'companyName', 'organizationType', 
-                                 'industryType', 'teamSize', 'yearEstablished', 'phoneNumber'];
-            for (const field of requiredFields) {
-                if (!req.body[field]) {
-                    return res.status(400).json({
-                        success: false,
-                        message: `Missing required field: ${field}`
-                    });
-                }
-            }
+            // Ensure phone number is clean
+            const cleanPhone = req.body.headquarter_phone_no?.replace(/\D/g, '') || null;
 
             const profileData = {
-                full_name: req.body.fullName || req.body.companyName,
-                company_mail_id: req.body.email,
-                password: req.body.password,
-                company_name: req.body.companyName,
-                organizations_type: req.body.organizationType,
-                industry_type: req.body.industryType,
-                team_size: req.body.teamSize,
-                year_of_establishment: req.body.yearEstablished,
-                headquarter_phone_no: req.body.phoneNumber,
-                // Optional fields
-                company_logo_url: req.body.companyLogoUrl || null,
-                company_banner_url: req.body.companyBannerUrl || null,
-                about_company: req.body.aboutUs || '',
-                email_id: req.body.email // Match DB column
+            full_name: req.body.full_name,
+            company_mail_id: req.body.company_mail_id,
+            password: req.body.password,
+            company_logo_url: req.body.company_logo_url || null,
+            company_banner_url: req.body.company_banner_url || null,
+            company_name: req.body.company_name,
+            about_company: req.body.about_company,
+            organizations_type: req.body.organizations_type,
+            industry_type: req.body.industry_type,
+            team_size: req.body.team_size,
+            year_of_establishment: req.body.year_of_establishment,
+            company_website: req.body.company_website || null,
+            company_vision: req.body.company_vision || null,
+            headquarter_phone_no: cleanPhone, // Use cleaned phone
+            facebook_url: req.body.facebook_url || null,
+            twitter_url: req.body.twitter_url || null,
+            instagram_url: req.body.instagram_url || null,
+            youtube_url: req.body.youtube_url || null,
+            role: 4 // Default company role
             };
 
             const newCompany = await CompanyProfile.create(profileData);
