@@ -7,15 +7,15 @@ const cors = require('cors');
 
 // CORS configuration
 const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:5173', // Add local dev port
-    'https://job-portal-client-ashen.vercel.app',
-    'https://job-portal-server-six-eosin.vercel.app'
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  credentials: true
+    origin: [
+        "https://job-portal-client-ashen.vercel.app",
+        "https://researchengine.in",
+        "http://localhost:5173",
+        "http://localhost:3000"
+    ],
+    credentials: true,
+    methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
+    allowedHeaders: ["Content-Type", "X-Client-Platform", "Authorization"],
 };
 
 // Apply CORS middleware with options
