@@ -1,5 +1,6 @@
 const dotenv = require("dotenv").config();
 const app = require("./App");
+const path = require("path");
 
 // PostgreSQL DB Connection
 const connectDB = require("./Utils/DBconnect");

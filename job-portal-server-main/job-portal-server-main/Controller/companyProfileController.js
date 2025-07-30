@@ -1,8 +1,8 @@
 //job-portal-server-main/job-portal-server-main/Controller/companyProfileController.js
-const CompanyProfile = require('../models/companyProfile');
+const CompanyProfile = require('../Model/companyProfile');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 
 const companyProfileController = {
     register: async (req, res) => {

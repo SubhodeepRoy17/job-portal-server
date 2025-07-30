@@ -1,11 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const companyProfileController = require('../controllers/companyProfileController');
-const fileUploadController = require('../controllers/fileUploadController');
-const { check, validationResult } = require('express-validator');
-const auth = require('../middleware/auth');
-const roleCheck = require('../middleware/roleCheck');
-const CompanyProfileDataRules = require('../validators/CompanyProfileDataRules');
+const companyProfileController = require('../Controller/companyProfileController');
+const fileUploadController = require('../Controller/fileUploadController');
+const CompanyProfileDataRules = require('../Validation/CompanyProfileDataRules');
 const cors = require('cors');
 
 // CORS configuration
@@ -39,10 +36,6 @@ router.post('/api/company/login',
     CompanyProfileDataRules.loginValidation(),
     companyProfileController.login
 );
-
-// Protected Routes (require auth)
-router.use(auth);
-router.use(roleCheck('company'));
 
 // Profile Routes
 router.get('/api/company/profile',

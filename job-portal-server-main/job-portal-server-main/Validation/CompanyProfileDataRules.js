@@ -1,6 +1,6 @@
 //job-portal-server-main/job-portal-server-main/Validation/CompanyProfileDataRules.js
 const { body } = require('express-validator');
-const pool = require('../config/db');
+const { pool } = require("../Utils/DBconnect");
 
 module.exports = {
     registerValidation: () => [
