@@ -28,12 +28,12 @@ module.exports = {
         
         body('organizationType')
             .notEmpty().withMessage('Organization type is required')
-            .isIn(['startup', 'corporation', 'nonprofit', 'government', 'agency']),
+            .isIn(['solo proprietor', 'pvt LTD', 'LTD', 'OPC', 'LLP', 'INC', 'Corporation']),
         
         body('industryType')
             .notEmpty().withMessage('Industry type is required')
-            .isIn(['technology', 'healthcare', 'finance', 'education', 'retail', 'manufacturing']),
-        
+            .isIn(['Fintech', 'Engineering', 'Software & IT', 'Edutech', 'oil and gas', 'other']),       
+
         body('teamSize')
             .notEmpty().withMessage('Team size is required')
             .isIn(['1-10', '11-50', '51-200', '201-500', '500+']),
@@ -75,12 +75,12 @@ module.exports = {
         
         body('industry_type')
             .optional()
-            .isIn(['Fintech', 'Engineering', 'Software & IT', 'edutech', 'oil and gas', 'other'])
+            .isIn(['Fintech', 'Engineering', 'Software & IT', 'Edutech', 'oil and gas', 'other'])
             .withMessage('Invalid industry type'),
         
         body('team_size')
             .optional()
-            .isIn(['1-10', '10-50', '50-100', '100-300', '300-1000', '2000-10000'])
+            .isIn(['1-10', '11-50', '51-200', '201-500', '500+'])
             .withMessage('Invalid team size'),
         
         body('year_of_establishment')
