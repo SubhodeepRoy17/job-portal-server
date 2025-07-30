@@ -37,34 +37,40 @@ const upload = multer({
 });
 
 exports.uploadFile = async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({
-                success: false,
-                message: 'No file uploaded'
-            });
-        }
+  try {
+    console.log('Upload request received'); // Debug log
+    console.log('Files:', req.files); // Debug log
+    console.log('File:', req.file); // Debug log
 
-        // Construct full accessible URL
-        const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-
-        res.status(200).json({
-            success: true,
-            message: 'File uploaded successfully',
-            data: {
-                url: fileUrl,
-                type: req.file.mimetype,
-                size: req.file.size
-            }
-        });
-    } catch (error) {
-        console.error('Upload error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'File upload failed',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
+    if (!req.file) {
+      console.log('No file received in upload');
+      return res.status(400).json({
+        success: false,
+        message: 'No file uploaded'
+      });
     }
+
+    // Construct full accessible URL
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    console.log('Generated file URL:', fileUrl); // Debug log
+
+    res.status(200).json({
+      success: true,
+      message: 'File uploaded successfully',
+      data: {
+        url: fileUrl,
+        type: req.file.mimetype,
+        size: req.file.size
+      }
+    });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'File upload failed',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
 };
 
 exports.getUploadMiddleware = () => upload.single('file');
