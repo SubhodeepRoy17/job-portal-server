@@ -49,8 +49,8 @@ module.exports = {
         
         body('year_of_establishment')
             .optional()
-            .isInt({ min: 1800, max: new Date().getFullYear() })
-            .withMessage(`Year must be between 1800 and ${new Date().getFullYear()}`),
+            .isISO8601()
+            .withMessage('Must be valid ISO date (YYYY-MM-DD)'),
         
         body('headquarter_phone_no')
             .optional()

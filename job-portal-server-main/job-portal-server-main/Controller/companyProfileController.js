@@ -30,7 +30,9 @@ const companyProfileController = {
             organizations_type: req.body.organizations_type,
             industry_type: req.body.industry_type,
             team_size: req.body.team_size,
-            year_of_establishment: req.body.year_of_establishment,
+            year_of_establishment: req.body.year_of_establishment 
+            ? new Date(req.body.year_of_establishment).toISOString() 
+            : null,
             company_website: req.body.company_website || null,
             company_vision: req.body.company_vision || null,
             headquarter_phone_no: cleanPhone, // Use cleaned phone
