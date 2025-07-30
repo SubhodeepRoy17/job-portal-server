@@ -7,48 +7,44 @@ module.exports = {
         body('companyName')
             .trim()
             .notEmpty().withMessage('Company name is required')
-            .isLength({ max: 255 }).withMessage('Company name cannot exceed 255 characters'),
+            .isLength({ max: 255 }),
         
         body('email')
             .trim()
-            .notEmpty().withMessage('Company email is required')
-            .isEmail().withMessage('Invalid email format')
+            .notEmpty().withMessage('Email is required')
+            .isEmail()
             .custom(async (email) => {
                 const { rows } = await pool.query(
-                    'SELECT 1 FROM company_profile WHERE company_mail_id = $1',
+                    'SELECT 1 FROM company_profile WHERE company_mail_id = $1 OR email_id = $1',
                     [email]
                 );
-                if (rows.length > 0) {
-                    throw new Error('Email already registered');
-                }
+                if (rows.length > 0) throw new Error('Email already registered');
                 return true;
             }),
         
         body('password')
             .notEmpty().withMessage('Password is required')
-            .isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+            .isLength({ min: 8 }),
         
         body('organizationType')
             .notEmpty().withMessage('Organization type is required')
-            .isIn(['startup', 'corporation', 'nonprofit', 'government', 'agency'])
-            .withMessage('Invalid organization type'),
+            .isIn(['startup', 'corporation', 'nonprofit', 'government', 'agency']),
         
         body('industryType')
             .notEmpty().withMessage('Industry type is required')
-            .isIn(['technology', 'healthcare', 'finance', 'education', 'retail', 'manufacturing'])
-            .withMessage('Invalid industry type'),
+            .isIn(['technology', 'healthcare', 'finance', 'education', 'retail', 'manufacturing']),
         
         body('teamSize')
             .notEmpty().withMessage('Team size is required')
-            .isIn(['1-10', '11-50', '51-200', '201-500', '500+'])
-            .withMessage('Invalid team size'),
+            .isIn(['1-10', '11-50', '51-200', '201-500', '500+']),
         
         body('yearEstablished')
-            .notEmpty().withMessage('Year of establishment is required'),
+            .notEmpty().withMessage('Year of establishment is required')
+            .isInt({ min: 1800, max: new Date().getFullYear() }),
         
         body('phoneNumber')
             .notEmpty().withMessage('Phone number is required')
-            .isMobilePhone().withMessage('Invalid phone number')
+            .isMobilePhone()
     ],
 
     loginValidation: () => [

@@ -1,3 +1,4 @@
+//job-portal-server-main/job-portal-server-main/Utils/DBconnect.js
 require("dotenv").config();
 const { Pool } = require("pg");
 

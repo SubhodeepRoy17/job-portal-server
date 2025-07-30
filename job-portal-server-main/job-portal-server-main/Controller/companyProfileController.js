@@ -8,6 +8,7 @@ const companyProfileController = {
     register: async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            console.log('Validation errors:', errors.array()); // Debug
             return res.status(400).json({ 
                 success: false,
                 message: 'Validation failed',
@@ -16,74 +17,55 @@ const companyProfileController = {
         }
 
         try {
-            console.log('Raw request body:', req.body); // Debug log
+            console.log('Raw request body:', req.body);
+
+            // Ensure all required fields exist
+            const requiredFields = ['email', 'password', 'companyName', 'organizationType', 
+                                 'industryType', 'teamSize', 'yearEstablished', 'phoneNumber'];
+            for (const field of requiredFields) {
+                if (!req.body[field]) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `Missing required field: ${field}`
+                    });
+                }
+            }
 
             const profileData = {
-                full_name: req.body.fullName,
+                full_name: req.body.fullName || req.body.companyName,
                 company_mail_id: req.body.email,
                 password: req.body.password,
-                company_logo_url: req.body.company_logo_url || null,
-                company_banner_url: req.body.company_banner_url || null,
                 company_name: req.body.companyName,
-                about_company: req.body.aboutUs,
                 organizations_type: req.body.organizationType,
                 industry_type: req.body.industryType,
                 team_size: req.body.teamSize,
                 year_of_establishment: req.body.yearEstablished,
-                company_website: req.body.companyWebsite || null,
-                company_vision: req.body.companyVision || null,
-                headquarter_phone_no: `${req.body.phoneCountryCode || ''}${req.body.phoneNumber || ''}`,
-                facebook_url: req.body.socialLinks?.find(l => l.platform === 'facebook')?.url || null,
-                twitter_url: req.body.socialLinks?.find(l => l.platform === 'twitter')?.url || null,
-                instagram_url: req.body.socialLinks?.find(l => l.platform === 'instagram')?.url || null,
-                youtube_url: req.body.socialLinks?.find(l => l.platform === 'youtube')?.url || null
+                headquarter_phone_no: req.body.phoneNumber,
+                // Optional fields
+                company_logo_url: req.body.companyLogoUrl || null,
+                company_banner_url: req.body.companyBannerUrl || null,
+                about_company: req.body.aboutUs || '',
+                email_id: req.body.email // Match DB column
             };
 
-            console.log('Processed profile data:', profileData); // Debug log
-
-            const existingCompany = await CompanyProfile.findByEmail(profileData.company_mail_id);
-            if (existingCompany) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Company email already registered'
-                });
-            }
-
             const newCompany = await CompanyProfile.create(profileData);
-            
             const token = jwt.sign(
-                { 
-                    id: newCompany.id, 
-                    role: newCompany.role,
-                    email: newCompany.company_mail_id
-                },
+                { id: newCompany.id, role: newCompany.role, email: newCompany.company_mail_id },
                 process.env.JWT_SECRET,
                 { expiresIn: '7d' }
             );
 
-            return res.status(201).json({
+            res.status(201).json({
                 success: true,
                 message: 'Company registered successfully',
-                data: {
-                    token,
-                    company: {
-                        id: newCompany.id,
-                        name: newCompany.company_name,
-                        email: newCompany.company_mail_id,
-                        role: newCompany.role
-                    }
-                }
+                data: { token, company: newCompany }
             });
 
         } catch (error) {
-            console.error('Full registration error:', {
-                message: error.message,
-                stack: error.stack,
-                error: error
-            });
-            return res.status(500).json({ 
+            console.error('Registration error:', error);
+            res.status(500).json({ 
                 success: false,
-                message: 'Registration failed. Please try again.',
+                message: 'Registration failed. Please check server logs.',
                 error: process.env.NODE_ENV === 'development' ? error.message : undefined
             });
         }

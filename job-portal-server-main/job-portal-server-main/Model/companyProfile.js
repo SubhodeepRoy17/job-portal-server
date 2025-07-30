@@ -7,54 +7,50 @@ const CompanyProfile = {
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
-
             const query = `
                 INSERT INTO company_profile (
-                    full_name, company_mail_id, password, role, company_logo_url,
-                    company_banner_url, company_name, about_company, organizations_type,
-                    industry_type, team_size, year_of_establishment, company_website,
-                    company_app_link, company_vision, linkedin_url, instagram_url,
-                    facebook_url, youtube_url, custom_link, map_location_url,
-                    headquarter_phone_no, email_id
-                ) 
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 
-                        $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+                    full_name, company_mail_id, password, role,
+                    company_name, organizations_type, industry_type,
+                    team_size, year_of_establishment, headquarter_phone_no,
+                    email_id ${/* Optional fields with conditional commas */''}
+                    ${profileData.company_logo_url ? ', company_logo_url' : ''}
+                    ${profileData.company_banner_url ? ', company_banner_url' : ''}
+                    ${profileData.about_company ? ', about_company' : ''}
+                ) VALUES (
+                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+                    ${profileData.company_logo_url ? ', $12' : ''}
+                    ${profileData.company_banner_url ? ', $13' : ''}
+                    ${profileData.about_company ? ', $14' : ''}
+                )
                 RETURNING id, company_name, company_mail_id, role
             `;
             
             const hashedPassword = await bcrypt.hash(profileData.password, 12);
-            
-            const values = [
+            let values = [
                 profileData.full_name,
                 profileData.company_mail_id,
                 hashedPassword,
-                4, // Company role
-                profileData.company_logo_url || null,
-                profileData.company_banner_url || null,
+                4, // Default role for companies
                 profileData.company_name,
-                profileData.about_company,
                 profileData.organizations_type,
                 profileData.industry_type,
                 profileData.team_size,
                 profileData.year_of_establishment,
-                profileData.company_website || null,
-                profileData.company_app_link || null,
-                profileData.company_vision || null,
-                profileData.linkedin_url || null,
-                profileData.instagram_url || null,
-                profileData.facebook_url || null,
-                profileData.youtube_url || null,
-                profileData.custom_link || null,
-                profileData.map_location_url || null,
                 profileData.headquarter_phone_no,
-                profileData.email_id || profileData.company_mail_id
+                profileData.email_id
             ];
             
+            // Dynamically add optional fields
+            if (profileData.company_logo_url) values.push(profileData.company_logo_url);
+            if (profileData.company_banner_url) values.push(profileData.company_banner_url);
+            if (profileData.about_company) values.push(profileData.about_company);
+
             const { rows } = await client.query(query, values);
             await client.query('COMMIT');
             return rows[0];
         } catch (error) {
             await client.query('ROLLBACK');
+            console.error('DB Error:', error); // Detailed logging
             throw error;
         } finally {
             client.release();
