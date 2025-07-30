@@ -7,50 +7,53 @@ const CompanyProfile = {
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
+
             const query = `
-                INSERT INTO company_profile (
-                    full_name, company_mail_id, password, role,
-                    company_name, organizations_type, industry_type,
-                    team_size, year_of_establishment, headquarter_phone_no,
-                    email_id ${/* Optional fields with conditional commas */''}
-                    ${profileData.company_logo_url ? ', company_logo_url' : ''}
-                    ${profileData.company_banner_url ? ', company_banner_url' : ''}
-                    ${profileData.about_company ? ', about_company' : ''}
-                ) VALUES (
-                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
-                    ${profileData.company_logo_url ? ', $12' : ''}
-                    ${profileData.company_banner_url ? ', $13' : ''}
-                    ${profileData.about_company ? ', $14' : ''}
-                )
-                RETURNING id, company_name, company_mail_id, role
+            INSERT INTO company_profile (
+                full_name, company_mail_id, password, role,
+                company_logo_url, company_banner_url, company_name,
+                about_company, organizations_type, industry_type,
+                team_size, year_of_establishment, company_website,
+                company_vision, headquarter_phone_no, email_id
+            ) VALUES (
+                $1::text, $2::text, $3::text, $4::integer,
+                $5::text, $6::text, $7::text,
+                $8::text, $9::text, $10::text,
+                $11::text, $12::date, $13::text,
+                $14::text, $15::text, $16::text
+            )
+            RETURNING id, company_name, company_mail_id, role
             `;
-            
-            const hashedPassword = await bcrypt.hash(profileData.password, 12);
-            let values = [
-                profileData.full_name,
-                profileData.company_mail_id,
-                hashedPassword,
-                4, // Default role for companies
-                profileData.company_name,
-                profileData.organizations_type,
-                profileData.industry_type,
-                profileData.team_size,
-                profileData.year_of_establishment,
-                profileData.headquarter_phone_no,
-                profileData.email_id
+
+            const values = [
+            profileData.full_name,
+            profileData.company_mail_id,
+            await bcrypt.hash(profileData.password, 12),
+            4, // Default company role
+            profileData.company_logo_url || null,
+            profileData.company_banner_url || null,
+            profileData.company_name,
+            profileData.about_company,
+            profileData.organizations_type,
+            profileData.industry_type,
+            profileData.team_size,
+            profileData.year_of_establishment, // This was likely the problematic parameter
+            profileData.company_website || null,
+            profileData.company_vision || null,
+            profileData.headquarter_phone_no,
+            profileData.email_id || profileData.company_mail_id
             ];
-            
-            // Dynamically add optional fields
-            if (profileData.company_logo_url) values.push(profileData.company_logo_url);
-            if (profileData.company_banner_url) values.push(profileData.company_banner_url);
-            if (profileData.about_company) values.push(profileData.about_company);
 
             const { rows } = await client.query(query, values);
             await client.query('COMMIT');
             return rows[0];
         } catch (error) {
             await client.query('ROLLBACK');
-            console.error('DB Error:', error); // Detailed logging
+            console.error('Database Error:', {
+            query: error.query,
+            parameters: error.parameters,
+            stack: error.stack
+            });
             throw error;
         } finally {
             client.release();
