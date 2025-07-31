@@ -6,46 +6,52 @@ const bcrypt = require('bcrypt');
 
 const companyProfileController = {
     register: async (req, res) => {
+        console.log('Incoming registration data:', req.body); // Debug log
+        
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            console.error('Validation errors:', errors.array());
             return res.status(400).json({ 
-            success: false,
-            message: 'Validation failed',
-            errors: errors.array() 
+                success: false,
+                message: 'Validation failed',
+                errors: errors.array() 
             });
         }
 
         try {
-            // Ensure phone number is clean
+            // Clean and validate data
             const cleanPhone = req.body.headquarter_phone_no?.replace(/\D/g, '') || null;
+            const establishmentDate = req.body.year_of_establishment 
+                ? new Date(req.body.year_of_establishment).toISOString() 
+                : null;
 
             const profileData = {
-            full_name: req.body.full_name,
-            company_mail_id: req.body.company_mail_id,
-            password: req.body.password,
-            company_logo_url: req.body.company_logo_url || null,
-            company_banner_url: req.body.company_banner_url || null,
-            company_name: req.body.company_name,
-            about_company: req.body.about_company,
-            organizations_type: req.body.organizations_type,
-            industry_type: req.body.industry_type,
-            team_size: req.body.team_size,
-            year_of_establishment: req.body.year_of_establishment 
-            ? new Date(req.body.year_of_establishment).toISOString() 
-            : null,
-            company_website: req.body.company_website || null,
-            company_vision: req.body.company_vision || null,
-            headquarter_phone_no: cleanPhone, // Use cleaned phone
-            facebook_url: req.body.facebook_url || null,
-            twitter_url: req.body.twitter_url || null,
-            instagram_url: req.body.instagram_url || null,
-            youtube_url: req.body.youtube_url || null,
-            role: 4 // Default company role
+                full_name: req.body.full_name || req.body.company_name,
+                company_mail_id: req.body.company_mail_id,
+                password: req.body.password,
+                company_logo_url: req.body.company_logo_url || null,
+                company_banner_url: req.body.company_banner_url || null,
+                company_name: req.body.company_name,
+                about_company: req.body.about_company,
+                organizations_type: req.body.organizations_type,
+                industry_type: req.body.industry_type,
+                team_size: req.body.team_size,
+                year_of_establishment: establishmentDate,
+                company_website: req.body.company_website || null,
+                company_vision: req.body.company_vision || null,
+                headquarter_phone_no: cleanPhone,
+                facebook_url: req.body.facebook_url || null,
+                twitter_url: req.body.twitter_url || null,
+                instagram_url: req.body.instagram_url || null,
+                youtube_url: req.body.youtube_url || null,
+                role: 4
             };
+
+            console.log('Processed profile data:', profileData); // Debug log
 
             const newCompany = await CompanyProfile.create(profileData);
             const token = jwt.sign(
-                { id: newCompany.id, role: newCompany.role, email: newCompany.company_mail_id },
+                { id: newCompany.id, role: newCompany.role },
                 process.env.JWT_SECRET,
                 { expiresIn: '7d' }
             );
@@ -57,11 +63,15 @@ const companyProfileController = {
             });
 
         } catch (error) {
-            console.error('Registration error:', error);
+            console.error('FULL REGISTRATION ERROR:', {
+                message: error.message,
+                stack: error.stack,
+                query: error.query,
+                parameters: error.parameters
+            });
             res.status(500).json({ 
                 success: false,
-                message: 'Registration failed. Please check server logs.',
-                error: process.env.NODE_ENV === 'development' ? error.message : undefined
+                message: 'Registration failed. ' + error.message
             });
         }
     },

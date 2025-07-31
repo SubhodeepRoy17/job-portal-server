@@ -6,53 +6,54 @@ const CompanyProfile = {
     async create(profileData) {
         const client = await pool.connect();
         try {
+            console.log('Executing query with:', profileData);
+            
             await client.query('BEGIN');
-
             const query = `
-            INSERT INTO company_profile (
-                full_name, company_mail_id, password, role,
-                company_logo_url, company_banner_url, company_name,
-                about_company, organizations_type, industry_type,
-                team_size, year_of_establishment, company_website,
-                company_vision, headquarter_phone_no, email_id
-            ) VALUES (
-                $1::text, $2::text, $3::text, $4::integer,
-                $5::text, $6::text, $7::text,
-                $8::text, $9::text, $10::text,
-                $11::text, $12::date, $13::text,
-                $14::text, $15::text, $16::text
-            )
-            RETURNING id, company_name, company_mail_id, role
+                INSERT INTO company_profile (
+                    full_name, company_mail_id, password, role,
+                    company_logo_url, company_banner_url, company_name,
+                    about_company, organizations_type, industry_type,
+                    team_size, year_of_establishment, company_website,
+                    company_vision, headquarter_phone_no
+                ) VALUES (
+                    $1, $2, $3, $4,
+                    $5, $6, $7,
+                    $8, $9, $10,
+                    $11, $12, $13,
+                    $14, $15
+                )
+                RETURNING id, company_name, company_mail_id, role
             `;
 
             const values = [
-            profileData.full_name,
-            profileData.company_mail_id,
-            await bcrypt.hash(profileData.password, 12),
-            4, // Default company role
-            profileData.company_logo_url || null,
-            profileData.company_banner_url || null,
-            profileData.company_name,
-            profileData.about_company,
-            profileData.organizations_type,
-            profileData.industry_type,
-            profileData.team_size,
-            profileData.year_of_establishment, // This was likely the problematic parameter
-            profileData.company_website || null,
-            profileData.company_vision || null,
-            profileData.headquarter_phone_no,
-            profileData.email_id || profileData.company_mail_id
+                profileData.full_name,
+                profileData.company_mail_id,
+                await bcrypt.hash(profileData.password, 12),
+                4,
+                profileData.company_logo_url,
+                profileData.company_banner_url,
+                profileData.company_name,
+                profileData.about_company,
+                profileData.organizations_type,
+                profileData.industry_type,
+                profileData.team_size,
+                profileData.year_of_establishment,
+                profileData.company_website,
+                profileData.company_vision,
+                profileData.headquarter_phone_no
             ];
 
             const { rows } = await client.query(query, values);
             await client.query('COMMIT');
             return rows[0];
+
         } catch (error) {
             await client.query('ROLLBACK');
-            console.error('Database Error:', {
-            query: error.query,
-            parameters: error.parameters,
-            stack: error.stack
+            console.error('DATABASE ERROR DETAILS:', {
+                query: error.query,
+                parameters: error.parameters,
+                stack: error.stack
             });
             throw error;
         } finally {
