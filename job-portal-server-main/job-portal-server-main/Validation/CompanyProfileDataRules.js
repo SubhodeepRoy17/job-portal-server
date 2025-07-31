@@ -6,14 +6,21 @@ module.exports = {
     registerValidation: () => [
         body('company_name').notEmpty().withMessage('Company name is required'),
         body('company_mail_id')
-            .isEmail().withMessage('Invalid email format')
-            .custom(async (email) => {
-            const exists = await pool.query(
-                'SELECT 1 FROM company_profile WHERE company_mail_id = $1', 
-                [email]
-            );
-            if (exists.rows.length) throw new Error('Email already registered');
-            }),
+        .isEmail().withMessage('Invalid email format')
+        .custom(async (email) => {
+        const publicDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
+        const domain = email.split('@')[1];
+        
+        if (publicDomains.includes(domain)) {
+            throw new Error('Public email domains are not allowed');
+        }
+
+        const exists = await pool.query(
+            'SELECT 1 FROM company_profile WHERE company_mail_id = $1', 
+            [email]
+        );
+        if (exists.rows.length) throw new Error('Email already registered');
+        }),
         body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
         body('headquarter_phone_no')
             .optional()
