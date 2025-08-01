@@ -38,9 +38,7 @@ router.post('/login',
   companyProfileController.login
 );
 
-router.get('/profile',
-  companyProfileController.getProfile
-);
+router.get('/profile', companyProfileController.getCompanyProfile);
 
 router.put('/profile',
   CompanyProfileDataRules.updateValidation(),
