@@ -33,6 +33,11 @@ router.post('/register',
   companyProfileController.register
 );
 
+router.post('/login',
+  CompanyProfileDataRules.loginValidation(), // Use the new validation
+  companyProfileController.login
+);
+
 router.get('/profile',
   companyProfileController.getProfile
 );

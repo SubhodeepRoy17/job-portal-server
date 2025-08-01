@@ -64,14 +64,14 @@ const CompanyProfile = {
     async findByEmail(company_mail_id) {
         const query = `
             SELECT id, full_name, company_mail_id, password, role, 
-                   company_logo_url, company_banner_url, company_name,
-                   about_company, organizations_type, industry_type,
-                   team_size, year_of_establishment, company_website,
-                   company_app_link, company_vision, linkedin_url,
-                   instagram_url, facebook_url, youtube_url, custom_link,
-                   map_location_url, headquarter_phone_no, email_id
+                company_logo_url, company_banner_url, company_name,
+                about_company, organizations_type, industry_type,
+                team_size, year_of_establishment, company_website,
+                company_app_link, company_vision, linkedin_url,
+                instagram_url, facebook_url, youtube_url, custom_link,
+                map_location_url, headquarter_phone_no, email_id
             FROM company_profile 
-            WHERE company_mail_id = $1
+            WHERE LOWER(company_mail_id) = LOWER($1)
         `;
         const { rows } = await pool.query(query, [company_mail_id]);
         return rows[0];

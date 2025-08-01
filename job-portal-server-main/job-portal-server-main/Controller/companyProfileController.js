@@ -76,93 +76,85 @@ const companyProfileController = {
         }
     },
 
+    // In the login method of companyProfileController.js
     login: async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            console.error('Login validation errors:', errors.array());
             return res.status(400).json({ 
                 success: false,
                 message: 'Validation failed',
-                errors: errors.array().map(err => ({
-                    field: err.param,
-                    message: err.msg
-                }))
+                errors: errors.array()
             });
         }
 
         try {
             const { company_mail_id, password } = req.body;
+            
+            // More detailed logging
+            console.log(`Login attempt for: ${company_mail_id}`);
+            
             const company = await CompanyProfile.findByEmail(company_mail_id);
 
             if (!company) {
+                console.log(`Login failed - company not found: ${company_mail_id}`);
                 return res.status(401).json({
                     success: false,
-                    message: 'Invalid credentials'
+                    message: 'Invalid email or password' // Generic message for security
                 });
             }
 
             const isMatch = await bcrypt.compare(password, company.password);
             if (!isMatch) {
+                console.log(`Login failed - password mismatch for: ${company_mail_id}`);
                 return res.status(401).json({
                     success: false,
-                    message: 'Invalid credentials'
+                    message: 'Invalid email or password' // Generic message for security
                 });
             }
 
+            // Enhanced token payload
+            const tokenPayload = {
+                id: company.id,
+                role: company.role,
+                email: company.company_mail_id,
+                name: company.company_name
+            };
+
             const token = jwt.sign(
-                { 
-                    id: company.id, 
-                    role: company.role,
-                    email: company.company_mail_id
-                },
+                tokenPayload,
                 process.env.JWT_SECRET,
                 { expiresIn: '7d' }
             );
 
+            // Response without sensitive data
+            const responseData = {
+                id: company.id,
+                company_name: company.company_name,
+                company_mail_id: company.company_mail_id,
+                role: company.role,
+                company_logo_url: company.company_logo_url
+            };
+
+            console.log(`Successful login for company ID: ${company.id}`);
             res.status(200).json({
                 success: true,
                 message: 'Login successful',
                 data: {
                     token,
-                    company: {
-                        id: company.id,
-                        name: company.company_name,
-                        email: company.company_mail_id,
-                        role: company.role
-                    }
+                    company: responseData
                 }
             });
 
         } catch (error) {
-            console.error('Login error:', error);
+            console.error('Login error:', {
+                message: error.message,
+                stack: error.stack,
+                timestamp: new Date().toISOString()
+            });
             res.status(500).json({ 
                 success: false,
-                message: 'Internal server error',
-                error: process.env.NODE_ENV === 'development' ? error.message : undefined
-            });
-        }
-    },
-
-    getProfile: async (req, res) => {
-        try {
-            const company = await CompanyProfile.getProfileById(req.user.id);
-            if (!company) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Company not found'
-                });
-            }
-
-            res.status(200).json({
-                success: true,
-                data: company
-            });
-
-        } catch (error) {
-            console.error('Get profile error:', error);
-            res.status(500).json({ 
-                success: false,
-                message: 'Internal server error',
-                error: process.env.NODE_ENV === 'development' ? error.message : undefined
+                message: 'Authentication server error'
             });
         }
     },
