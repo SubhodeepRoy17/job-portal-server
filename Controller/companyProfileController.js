@@ -82,6 +82,7 @@ const companyProfileController = {
             return res.status(400).json({ 
                 success: false,
                 message: 'Validation failed',
+                errorCode: 'VALIDATION_ERROR',
                 errors: errors.array()
             });
         }
@@ -94,7 +95,8 @@ const companyProfileController = {
             if (!company) {
                 return res.status(401).json({
                     success: false,
-                    message: 'Invalid credentials'
+                    message: 'No account found with this email',
+                    errorCode: 'ACCOUNT_NOT_FOUND'
                 });
             }
 
@@ -102,11 +104,12 @@ const companyProfileController = {
             if (!isMatch) {
                 return res.status(401).json({
                     success: false,
-                    message: 'Invalid credentials'
+                    message: 'Invalid password',
+                    errorCode: 'INVALID_PASSWORD'
                 });
             }
 
-            // Token payload with minimal required fields
+            // Token generation and success response remains the same
             const tokenPayload = {
                 id: company.id,
                 role: company.role,
@@ -119,7 +122,6 @@ const companyProfileController = {
                 { expiresIn: '7d' }
             );
 
-            // Response with only existing fields
             const responseData = {
                 id: company.id,
                 company_name: company.company_name,
@@ -127,7 +129,6 @@ const companyProfileController = {
                 role: company.role
             };
 
-            // Add optional fields only if they exist
             if (company.company_logo_url) {
                 responseData.company_logo_url = company.company_logo_url;
             }
@@ -146,6 +147,7 @@ const companyProfileController = {
             return res.status(500).json({ 
                 success: false,
                 message: 'Authentication server error',
+                errorCode: 'AUTH_SERVER_ERROR',
                 error: process.env.NODE_ENV === 'development' ? error.message : undefined
             });
         }
