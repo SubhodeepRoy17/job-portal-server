@@ -64,25 +64,34 @@ const CompanyProfile = {
     async findByEmail(company_mail_id) {
         try {
             const query = `
-                SELECT id, full_name, company_mail_id, password, role, 
-                    company_logo_url, company_banner_url, company_name,
-                    about_company, organizations_type, industry_type,
-                    team_size, year_of_establishment, company_website,
-                    company_app_link, company_vision, linkedin_url,
-                    instagram_url, facebook_url, youtube_url, custom_link,
-                    map_location_url, headquarter_phone_no, email_id
+                SELECT 
+                    id, 
+                    full_name, 
+                    company_mail_id, 
+                    password, 
+                    role,
+                    company_logo_url, 
+                    company_banner_url, 
+                    company_name,
+                    about_company, 
+                    organizations_type, 
+                    industry_type,
+                    team_size, 
+                    year_of_establishment, 
+                    company_website,
+                    company_vision,
+                    facebook_url,
+                    instagram_url, 
+                    youtube_url, 
+                    headquarter_phone_no
                 FROM company_profile 
                 WHERE LOWER(company_mail_id) = LOWER($1)
             `;
             const { rows } = await pool.query(query, [company_mail_id]);
             return rows[0];
         } catch (error) {
-            console.error('Database error in findByEmail:', {
-                message: error.message,
-                stack: error.stack,
-                email: company_mail_id
-            });
-            throw error; // Re-throw to be caught by controller
+            console.error('Database error in findByEmail:', error);
+            throw error;
         }
     },
 

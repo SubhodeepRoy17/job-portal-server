@@ -89,66 +89,48 @@ const companyProfileController = {
         try {
             const { company_mail_id, password } = req.body;
             
-            // Debug logging
-            console.log(`Login attempt for: ${company_mail_id}`);
-            
-            // Check if email and password are provided
-            if (!company_mail_id || !password) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Email and password are required'
-                });
-            }
-
-            // Find company by email
             const company = await CompanyProfile.findByEmail(company_mail_id);
             
             if (!company) {
-                console.log(`Company not found for email: ${company_mail_id}`);
                 return res.status(401).json({
                     success: false,
                     message: 'Invalid credentials'
                 });
             }
 
-            // Compare passwords
             const isMatch = await bcrypt.compare(password, company.password);
             if (!isMatch) {
-                console.log(`Password mismatch for company: ${company_mail_id}`);
                 return res.status(401).json({
                     success: false,
                     message: 'Invalid credentials'
                 });
             }
 
-            // Create token payload
+            // Token payload with minimal required fields
             const tokenPayload = {
                 id: company.id,
                 role: company.role,
-                email: company.company_mail_id,
-                name: company.company_name
+                email: company.company_mail_id
             };
 
-            // Verify JWT_SECRET is available
-            if (!process.env.JWT_SECRET) {
-                throw new Error('JWT_SECRET is not configured');
-            }
-
-            // Generate token
             const token = jwt.sign(
                 tokenPayload,
                 process.env.JWT_SECRET,
                 { expiresIn: '7d' }
             );
 
-            // Prepare response data (excluding sensitive info)
+            // Response with only existing fields
             const responseData = {
                 id: company.id,
                 company_name: company.company_name,
                 company_mail_id: company.company_mail_id,
-                role: company.role,
-                company_logo_url: company.company_logo_url
+                role: company.role
             };
+
+            // Add optional fields only if they exist
+            if (company.company_logo_url) {
+                responseData.company_logo_url = company.company_logo_url;
+            }
 
             return res.status(200).json({
                 success: true,
@@ -160,12 +142,7 @@ const companyProfileController = {
             });
 
         } catch (error) {
-            console.error('Login error:', {
-                message: error.message,
-                stack: error.stack,
-                timestamp: new Date().toISOString()
-            });
-            
+            console.error('Login error:', error);
             return res.status(500).json({ 
                 success: false,
                 message: 'Authentication server error',
