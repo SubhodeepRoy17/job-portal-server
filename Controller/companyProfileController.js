@@ -76,11 +76,9 @@ const companyProfileController = {
         }
     },
 
-    // In the login method of companyProfileController.js
     login: async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            console.error('Login validation errors:', errors.array());
             return res.status(400).json({ 
                 success: false,
                 message: 'Validation failed',
@@ -91,29 +89,39 @@ const companyProfileController = {
         try {
             const { company_mail_id, password } = req.body;
             
-            // More detailed logging
+            // Debug logging
             console.log(`Login attempt for: ${company_mail_id}`);
             
-            const company = await CompanyProfile.findByEmail(company_mail_id);
-
-            if (!company) {
-                console.log(`Login failed - company not found: ${company_mail_id}`);
-                return res.status(401).json({
+            // Check if email and password are provided
+            if (!company_mail_id || !password) {
+                return res.status(400).json({
                     success: false,
-                    message: 'Invalid email or password' // Generic message for security
+                    message: 'Email and password are required'
                 });
             }
 
+            // Find company by email
+            const company = await CompanyProfile.findByEmail(company_mail_id);
+            
+            if (!company) {
+                console.log(`Company not found for email: ${company_mail_id}`);
+                return res.status(401).json({
+                    success: false,
+                    message: 'Invalid credentials'
+                });
+            }
+
+            // Compare passwords
             const isMatch = await bcrypt.compare(password, company.password);
             if (!isMatch) {
-                console.log(`Login failed - password mismatch for: ${company_mail_id}`);
+                console.log(`Password mismatch for company: ${company_mail_id}`);
                 return res.status(401).json({
                     success: false,
-                    message: 'Invalid email or password' // Generic message for security
+                    message: 'Invalid credentials'
                 });
             }
 
-            // Enhanced token payload
+            // Create token payload
             const tokenPayload = {
                 id: company.id,
                 role: company.role,
@@ -121,13 +129,19 @@ const companyProfileController = {
                 name: company.company_name
             };
 
+            // Verify JWT_SECRET is available
+            if (!process.env.JWT_SECRET) {
+                throw new Error('JWT_SECRET is not configured');
+            }
+
+            // Generate token
             const token = jwt.sign(
                 tokenPayload,
                 process.env.JWT_SECRET,
                 { expiresIn: '7d' }
             );
 
-            // Response without sensitive data
+            // Prepare response data (excluding sensitive info)
             const responseData = {
                 id: company.id,
                 company_name: company.company_name,
@@ -136,8 +150,7 @@ const companyProfileController = {
                 company_logo_url: company.company_logo_url
             };
 
-            console.log(`Successful login for company ID: ${company.id}`);
-            res.status(200).json({
+            return res.status(200).json({
                 success: true,
                 message: 'Login successful',
                 data: {
@@ -152,9 +165,11 @@ const companyProfileController = {
                 stack: error.stack,
                 timestamp: new Date().toISOString()
             });
-            res.status(500).json({ 
+            
+            return res.status(500).json({ 
                 success: false,
-                message: 'Authentication server error'
+                message: 'Authentication server error',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined
             });
         }
     },
