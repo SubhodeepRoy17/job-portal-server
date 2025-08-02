@@ -15,13 +15,13 @@ const CompanyProfile = {
                     company_logo_url, company_banner_url, company_name,
                     about_company, organizations_type, industry_type,
                     team_size, year_of_establishment, company_website,
-                    company_vision, headquarter_phone_no
+                    company_vision, headquarter_phone_no, social_links, careers_link
                 ) VALUES (
                     $1, $2, $3, $4,
                     $5, $6, $7,
                     $8, $9, $10,
                     $11, $12, $13,
-                    $14, $15
+                    $14, $15, $16, $17
                 )
                 RETURNING id, company_name, company_mail_id, role
             `;
@@ -41,7 +41,9 @@ const CompanyProfile = {
                 profileData.year_of_establishment,
                 profileData.company_website,
                 profileData.company_vision,
-                profileData.headquarter_phone_no
+                profileData.headquarter_phone_no,
+                profileData.social_links,
+                profileData.careers_link
             ];
 
             const { rows } = await client.query(query, values);
@@ -80,10 +82,9 @@ const CompanyProfile = {
                     year_of_establishment, 
                     company_website,
                     company_vision,
-                    facebook_url,
-                    instagram_url, 
-                    youtube_url, 
-                    headquarter_phone_no
+                    social_links,
+                    headquarter_phone_no,
+                    careers_link
                 FROM company_profile 
                 WHERE LOWER(company_mail_id) = LOWER($1)
             `;
@@ -101,9 +102,9 @@ const CompanyProfile = {
                    company_logo_url, company_banner_url, company_name,
                    about_company, organizations_type, industry_type,
                    team_size, year_of_establishment, company_website,
-                   company_app_link, company_vision, linkedin_url,
-                   instagram_url, facebook_url, youtube_url, custom_link,
-                   map_location_url, headquarter_phone_no, email_id
+                   company_app_link, company_vision, social_links,
+                   custom_link, map_location_url, headquarter_phone_no,
+                   email_id, careers_link
             FROM company_profile 
             WHERE id = $1
         `;
@@ -131,16 +132,14 @@ const CompanyProfile = {
                     company_website = COALESCE($10, company_website),
                     company_app_link = COALESCE($11, company_app_link),
                     company_vision = COALESCE($12, company_vision),
-                    linkedin_url = COALESCE($13, linkedin_url),
-                    instagram_url = COALESCE($14, instagram_url),
-                    facebook_url = COALESCE($15, facebook_url),
-                    youtube_url = COALESCE($16, youtube_url),
-                    custom_link = COALESCE($17, custom_link),
-                    map_location_url = COALESCE($18, map_location_url),
-                    headquarter_phone_no = COALESCE($19, headquarter_phone_no),
-                    email_id = COALESCE($20, email_id),
+                    social_links = COALESCE($13, social_links),
+                    custom_link = COALESCE($14, custom_link),
+                    map_location_url = COALESCE($15, map_location_url),
+                    headquarter_phone_no = COALESCE($16, headquarter_phone_no),
+                    email_id = COALESCE($17, email_id),
+                    careers_link = COALESCE($18, careers_link),
                     updated_at = CURRENT_TIMESTAMP
-                WHERE id = $21
+                WHERE id = $19
                 RETURNING *
             `;
             
@@ -157,14 +156,12 @@ const CompanyProfile = {
                 profileData.company_website,
                 profileData.company_app_link,
                 profileData.company_vision,
-                profileData.linkedin_url,
-                profileData.instagram_url,
-                profileData.facebook_url,
-                profileData.youtube_url,
+                profileData.social_links, // This should be a JSON object containing all social links
                 profileData.custom_link,
                 profileData.map_location_url,
                 profileData.headquarter_phone_no,
                 profileData.email_id,
+                profileData.careers_link,
                 id
             ];
             
