@@ -5,6 +5,7 @@ const { createEducationTable } = require('./EducationModel');
 const { createRecruiterProfileTable } = require('./RecruiterProfileModel');
 const { createWorkExperienceTable } = require('./WorkExperienceModel');
 const { createUserProfileTable } = require('./UserProfileModel');
+const { createCompanyProfileTable } = require("./CompanyProfileModel");
 
 async function initializeDatabase() {
     await createUserTable();
@@ -14,6 +15,7 @@ async function initializeDatabase() {
     await createEducationTable();
     await createWorkExperienceTable();
     await createUserProfileTable();
+    await createCompanyProfileTable();
     console.log("✅ All tables created successfully");
 }
 
