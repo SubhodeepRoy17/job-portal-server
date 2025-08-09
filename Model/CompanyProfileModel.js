@@ -90,39 +90,37 @@ async function createCompanyProfile(profileData) {
 }
 
 async function updateCompanyProfile(userId, profileData) {
+    // 1. Filter out undefined/null values
+    const updates = {};
+    for (const [key, value] of Object.entries(profileData)) {
+        if (value !== undefined && value !== null) {
+            updates[key] = value;
+        }
+    }
+
+    // 2. Return early if no valid updates
+    if (Object.keys(updates).length === 0) {
+        throw new Error("No valid fields provided for update");
+    }
+
+    // 3. Build dynamic query
+    const setClause = Object.keys(updates)
+        .map((key, index) => `${key} = $${index + 1}`)
+        .join(", ");
+
+    const query = `
+        UPDATE main_company_profile
+        SET ${setClause}, updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = $${Object.keys(updates).length + 1}
+        RETURNING *
+    `;
+
+    // 4. Execute
     const { rows } = await pool.query(
-        `UPDATE main_company_profile SET
-            company_name = $1,
-            about = $2,
-            company_logo = $3,
-            banner_logo = $4,
-            organization_type = $5,
-            industry_type = $6,
-            team_size = $7,
-            year_of_establishment = $8,
-            careers_link = $9,
-            company_vision = $10,
-            map_location = $11,
-            social_links = $12,
-            updated_at = CURRENT_TIMESTAMP
-        WHERE user_id = $13
-        RETURNING *`,
-        [
-            profileData.company_name,
-            profileData.about,
-            profileData.company_logo,
-            profileData.banner_logo,
-            profileData.organization_type,
-            profileData.industry_type,
-            profileData.team_size,
-            profileData.year_of_establishment,
-            profileData.careers_link,
-            profileData.company_vision,
-            profileData.map_location,
-            profileData.social_links,
-            userId
-        ]
+        query,
+        [...Object.values(updates), userId]
     );
+
     return rows[0];
 }
 
