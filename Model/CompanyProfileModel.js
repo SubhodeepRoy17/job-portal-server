@@ -1,3 +1,4 @@
+//Model\CompanyProfileModel.js
 const { pool } = require("../Utils/DBconnect");
 
 async function createCompanyProfileTable() {

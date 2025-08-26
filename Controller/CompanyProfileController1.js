@@ -1,3 +1,4 @@
+//Controller\CompanyProfileController1.js
 const CompanyProfile = require("../Model/CompanyProfileModel");
 
 exports.getCompanyProfile = async (req, res) => {
