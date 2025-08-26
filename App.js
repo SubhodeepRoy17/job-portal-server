@@ -68,6 +68,6 @@ app.use("/api/recruiter-profile", authenticateUser, recruiterProfileRouter);
 app.use("/api/application", authenticateUser, ApplicationRouter);
 app.use("/api/work-experience", authenticateUser, WorkExperienceRouter);
 app.use("/api/education", authenticateUser, EducationRouter);
-app.use("/api/company-profile", authenticateUser, CompanyProfileRouter);
+app.use("/api/company-profile", CompanyProfileRouter);
 
 module.exports = app;
