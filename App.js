@@ -52,7 +52,7 @@ const CategoryRouter = require("./Router/CategoryRouter");
 const FacilitiesRouter = require("./Router/FacilitiesRouter");
 const CertificateRouter = require("./Router/CertificateRouter");
 const ProjectRouter = require("./Router/ProjectRouter");
-const CompanyProfileRouter = require("./Router/CompanyProfileRoutes");
+const CompanyProfileRouter = require("./Router/CompanyProfileRouter");
 // Route Mounting
 app.use("/api/skills", authenticateUser, SkillRouter);
 app.use("/api/categories", authenticateUser, CategoryRouter);
