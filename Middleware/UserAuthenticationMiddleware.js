@@ -1,3 +1,4 @@
+//Middleware/UserAuthenticationMiddleware.js
 const createHttpError = require("http-errors");
 const jwt = require("jsonwebtoken");
 const { pool } = require("../Utils/DBconnect"); // PostgreSQL connection

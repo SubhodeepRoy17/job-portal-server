@@ -8,12 +8,12 @@ const {
 } = require("../Controller/MentorController");
 
 const { clientPlatform } = require("../Middleware/clientPlatform");
-const { userAuthorizationHandler } = require("../Middleware/UserAuthorizationMiddleware");
+const { optionalAuthenticateUser } = require("../Middleware/OptionalAuthenticationMiddleware");
 
-// Get all mentors (role=3)
+// Get all mentors (role=3) - allows both authenticated and unauthenticated access
 MentorRouter.get("/",
     clientPlatform,
-    userAuthorizationHandler(1, 2, 3, 4), // All roles can access
+    optionalAuthenticateUser, // This will set req.user if token exists, otherwise continues
     getMentors
 );
 

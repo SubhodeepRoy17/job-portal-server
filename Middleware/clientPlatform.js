@@ -1,5 +1,5 @@
 // Created by Soumyadip Roy
-
+//Middleware/clientPlatform.js
 const clientPlatform = (req, res, next) => {
     try {
         const userAgent = req.headers["user-agent"] || "";
