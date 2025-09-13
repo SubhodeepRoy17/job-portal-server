@@ -1,3 +1,4 @@
+//Model/UserModel.js
 const { pool } = require("../Utils/DBconnect");
 const bcrypt = require("bcrypt");
 

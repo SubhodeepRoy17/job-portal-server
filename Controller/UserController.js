@@ -1,3 +1,4 @@
+//Controller/UserController.js
 const { pool } = require("../Utils/DBconnect");
 const createError = require("http-errors");
 const bcrypt = require("bcrypt");
