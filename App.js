@@ -63,7 +63,7 @@ app.use("/api/users", UserRouter);
 app.use("/api/certificates", authenticateUser, CertificateRouter);
 app.use("/api/projects", authenticateUser, ProjectRouter);
 app.use("/api/auth", AuthRouter);
-app.use("/api/mentors", MentorRouter);
+app.use("/api/mentors", authenticateUser, MentorRouter);
 app.use('/api/user-profile', authenticateUser, UserProfileRouter);
 app.use("/api/admin", authenticateUser, AdminRouter);
 app.use("/api/recruiter-profile", authenticateUser, recruiterProfileRouter);
